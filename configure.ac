@@ -65,6 +65,10 @@ AM_SILENT_RULES([yes])
 
 LT_INIT
 LIB_VERSION=`expr lib_current - lib_age`.lib_age.lib_revision
+LIB_VERSION_CURRENT=lib_current
+LIB_VERSION_REVISION=lib_revision
+LIB_VERSION_AGE=lib_age
+LIB_VERSION_NUMBER=`printf 0x%02x%02x%02x lib_current lib_revision lib_age`
 LIB_VERSION_INFO="lib_current:lib_revision:lib_age"
 
 # Respect empty CFLAGS during compiler tests
@@ -76,7 +80,15 @@ fi
 # and put LIB_VERSION in config.h
 AC_SUBST(LIB_VERSION)
 AC_SUBST(LIB_VERSION_INFO)
+AC_SUBST(LIB_VERSION_CURRENT)
+AC_SUBST(LIB_VERSION_REVISION)
+AC_SUBST(LIB_VERSION_AGE)
+AC_SUBST(LIB_VERSION_NUMBER)
 AC_DEFINE_UNQUOTED([LIB_VERSION], ["$LIB_VERSION"], [libalpm version number])
+AC_DEFINE_UNQUOTED([LIB_VERSION_CURRENT], ["$LIB_VERSION_CURRENT"], [libalpm version number current])
+AC_DEFINE_UNQUOTED([LIB_VERSION_REVISION], ["$LIB_VERSION_REVISION"], [libalpm version number revision])
+AC_DEFINE_UNQUOTED([LIB_VERSION_AGE], ["$LIB_VERSION_AGE"], [libalpm version number age])
+AC_DEFINE_UNQUOTED([LIB_VERSION_NUMBER], ["$LIB_VERSION_NUMBER"], [libalpm version number hex])
 
 # Help line for root directory
 AC_ARG_WITH(root-dir,
@@ -539,6 +551,7 @@ AC_CONFIG_FILES([
 lib/libalpm/Makefile
 lib/libalpm/po/Makefile.in
 lib/libalpm/libalpm.pc
+lib/libalpm/alpm.h
 src/common/Makefile
 src/pacman/Makefile
 src/pacman/po/Makefile.in
