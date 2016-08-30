@@ -50,6 +50,14 @@ do { \
 	} \
 } while(0)
 
+#ifdef HAVE_LIBCURL
+struct download {
+	/* Curl timeouts */
+	long lowspeedlimit;
+	long lowspeedtime;
+};
+#endif
+
 struct __alpm_handle_t {
 	/* internal usage */
 	alpm_db_t *db_local;    /* local db pointer */
@@ -60,6 +68,7 @@ struct __alpm_handle_t {
 #ifdef HAVE_LIBCURL
 	/* libcurl handle */
 	CURL *curl;             /* reusable curl_easy handle */
+	struct download download;
 #endif
 
 #ifdef HAVE_LIBGPGME

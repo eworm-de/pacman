@@ -29,6 +29,10 @@ Architecture = auto
 #NoUpgrade   =
 #NoExtract   =
 
+# Downloader options
+#LowSpeedLimit = 1
+#LowSpeedTime = 10
+
 # Misc options
 #UseSyslog
 #Color

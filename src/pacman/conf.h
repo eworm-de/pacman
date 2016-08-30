@@ -133,6 +133,10 @@ typedef struct __config_t {
 	/* Color strings for output */
 	colstr_t colstr;
 
+	/* Curl timeouts */
+	long lowspeedlimit;
+	long lowspeedtime;
+
 	alpm_list_t *repos;
 } config_t;
 

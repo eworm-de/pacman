@@ -812,6 +812,16 @@ const char *alpm_option_get_dbpath(alpm_handle_t *handle);
 /** Get the name of the database lock file. Read-only. */
 const char *alpm_option_get_lockfile(alpm_handle_t *handle);
 
+/** Returns the libcurl low speed limit in bytes per second. */
+long alpm_option_get_download_lowspeedlimit(alpm_handle_t *handle);
+/** Sets the libcurl low speed limit in bytes per second. */
+int alpm_option_set_download_lowspeedlimit(alpm_handle_t *handle, long lowspeedlimit);
+
+/** Returns the libcurl low speed time in seconds. */
+long alpm_option_get_download_lowspeedtime(alpm_handle_t *handle);
+/** Sets the libcurl low speed time in seconds. */
+int alpm_option_set_download_lowspeedtime(alpm_handle_t *handle, long lowspeedtime);
+
 /** @name Accessors to the list of package cache directories.
  * @{
  */

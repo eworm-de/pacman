@@ -247,6 +247,18 @@ const char SYMEXPORT *alpm_option_get_lockfile(alpm_handle_t *handle)
 	return handle->lockfile;
 }
 
+long SYMEXPORT alpm_option_get_download_lowspeedlimit(alpm_handle_t *handle)
+{
+	CHECK_HANDLE(handle, return -1);
+	return handle->download.lowspeedlimit;
+}
+
+long SYMEXPORT alpm_option_get_download_lowspeedtime(alpm_handle_t *handle)
+{
+	CHECK_HANDLE(handle, return -1);
+	return handle->download.lowspeedtime;
+}
+
 const char SYMEXPORT *alpm_option_get_gpgdir(alpm_handle_t *handle)
 {
 	CHECK_HANDLE(handle, return NULL);
@@ -359,6 +371,26 @@ int SYMEXPORT alpm_option_set_progresscb(alpm_handle_t *handle, alpm_cb_progress
 {
 	CHECK_HANDLE(handle, return -1);
 	handle->progresscb = cb;
+	return 0;
+}
+
+int SYMEXPORT alpm_option_set_download_lowspeedlimit(alpm_handle_t *handle, long lowspeedlimit)
+{
+	CHECK_HANDLE(handle, return -1);
+	if(lowspeedlimit < 0) {
+		RET_ERR(handle, ALPM_ERR_WRONG_ARGS, -1);
+	}
+	handle->download.lowspeedlimit = lowspeedlimit;
+	return 0;
+}
+
+int SYMEXPORT alpm_option_set_download_lowspeedtime(alpm_handle_t *handle, long lowspeedtime)
+{
+	CHECK_HANDLE(handle, return -1);
+	if(lowspeedtime < 0) {
+		RET_ERR(handle, ALPM_ERR_WRONG_ARGS, -1);
+	}
+	handle->download.lowspeedtime = lowspeedtime;
 	return 0;
 }
 
