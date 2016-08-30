@@ -195,6 +195,12 @@ static void usage(int op, const char * const myname)
 				addlist(_("      --ignore <pkg>   ignore a package upgrade (can be used more than once)\n"));
 				addlist(_("      --ignoregroup <grp>\n"
 				          "                       ignore a group upgrade (can be used more than once)\n"));
+#ifdef HAVE_LIBCURL
+				addlist(_("      --lowspeedlimit <speed>\n"
+				          "                       bytes per second that a download should be below\n"));
+				addlist(_("      --lowspeedtime <time>\n"
+				          "                       time in seconds that a download should be below lowspeedlimit\n"));
+#endif
 				/* pass through */
 			case PM_OP_REMOVE:
 				addlist(_("  -d, --nodeps         skip dependency version checks (-dd to skip all checks)\n"));
@@ -718,6 +724,12 @@ static int parsearg_upgrade(int opt)
 		case OP_IGNOREGROUP:
 			parsearg_util_addlist(&(config->ignoregrp));
 			break;
+		case OP_LOWSPEEDLIMIT:
+			config->lowspeedlimit = parse_positive_long(optarg);
+			break;
+		case OP_LOWSPEEDTIME:
+			config->lowspeedtime = parse_positive_long(optarg);
+			break;
 		default: return 1;
 	}
 	return 0;
@@ -933,6 +945,8 @@ static int parseargs(int argc, char *argv[])
 		{"logfile",    required_argument, 0, OP_LOGFILE},
 		{"ignoregroup", required_argument, 0, OP_IGNOREGROUP},
 		{"needed",     no_argument,       0, OP_NEEDED},
+		{"lowspeedlimit", required_argument, 0, OP_LOWSPEEDLIMIT},
+		{"lowspeedtime", required_argument, 0, OP_LOWSPEEDTIME},
 		{"asexplicit",     no_argument,   0, OP_ASEXPLICIT},
 		{"arch",       required_argument, 0, OP_ARCH},
 		{"print-format", required_argument, 0, OP_PRINTFORMAT},
