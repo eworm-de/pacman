@@ -76,6 +76,7 @@ int multiselect_question(char *array, int count);
 int colon_printf(const char *format, ...) __attribute__((format(printf, 1, 2)));
 int yesno(const char *format, ...) __attribute__((format(printf, 1, 2)));
 int noyes(const char *format, ...) __attribute__((format(printf, 1, 2)));
+long parse_positive_long(const char *str);
 
 int pm_printf(alpm_loglevel_t level, const char *format, ...) __attribute__((format(printf,2,3)));
 int pm_asprintf(char **string, const char *format, ...) __attribute__((format(printf,2,3)));

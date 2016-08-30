@@ -209,6 +209,18 @@ Options
 	Displays name, version and size of target packages formatted
 	as a table for upgrade, sync and remove operations.
 
+*LowSpeedLimit* = speed::
+    Sets the speed in bytes per second that a download should be below during
+    `LowSpeedTime` seconds to abort the transfer for being too slow. Setting
+    'speed' to 0 will disable the speed check. Defaults to 1 byte per second.
+    Note that this option will not affect external programs specified by
+    `XferCommand`.
+
+*LowSpeedTime* = time::
+    Sets the time in seconds that a download should be below the `LowSpeedLimit`
+    transfer speed to abort the transfer for being too slow. Setting 'time' to
+    0 will disable the speed check. Defaults to 10 seconds. Note that this
+    option will not affect external programs specified by `XferCommand`.
 
 Repository Sections
 -------------------

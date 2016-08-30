@@ -1620,6 +1620,25 @@ int noyes(const char *format, ...)
 	return ret;
 }
 
+/* Attempts to extract a positive long from a string; failure yields -1. */
+long parse_positive_long(const char *str)
+{
+	char *end;
+	long num;
+
+	errno = 0;
+	num = strtol(str, &end, 10);
+
+	if(end == str ||							/* Not a decimal number */
+		*end != 0 ||							/* Extra characters */
+		(num == LONG_MAX && errno == ERANGE) || /* Out of range */
+		num < 0) {								/* Out of range (negative) */
+		return -1;
+	}
+
+	return num;
+}
+
 int colon_printf(const char *fmt, ...)
 {
 	int ret;

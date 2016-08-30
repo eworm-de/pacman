@@ -112,6 +112,10 @@ struct __alpm_handle_t {
 	/* for delta parsing efficiency */
 	int delta_regex_compiled;
 	regex_t delta_regex;
+
+	/* Curl timeouts */
+	long lowspeedlimit;
+	long lowspeedtime;
 };
 
 alpm_handle_t *_alpm_handle_new(void);

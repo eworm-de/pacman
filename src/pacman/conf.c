@@ -122,6 +122,9 @@ config_t *config_new(void)
 	newconfig->colstr.err     = "";
 	newconfig->colstr.nocolor = "";
 
+	newconfig->lowspeedlimit  = 1L;
+	newconfig->lowspeedtime   = 10L;
+
 	return newconfig;
 }
 
@@ -603,6 +606,24 @@ static int _parse_options(const char *key, char *value,
 				return 1;
 			}
 			FREELIST(values);
+		} else if(strcmp(key, "LowSpeedLimit") == 0) {
+			config->lowspeedlimit = parse_positive_long(value);
+			if(config->lowspeedlimit < 0) {
+				pm_printf(ALPM_LOG_WARNING,
+						_("config file %s, line %d: invalid %s, using default.\n"),
+						file, linenum, "LowSpeedLimit");
+				config->lowspeedlimit = 1L;
+			}
+			pm_printf(ALPM_LOG_DEBUG, "config: lowspeedlimit: %ld\n", config->lowspeedlimit);
+		} else if(strcmp(key, "LowSpeedTime") == 0) {
+			config->lowspeedtime = parse_positive_long(value);
+			if(config->lowspeedtime < 0) {
+				pm_printf(ALPM_LOG_WARNING,
+						_("config file %s, line %d: invalid %s, using default.\n"),
+						file, linenum, "LowSpeedTime");
+				config->lowspeedtime = 10L;
+			}
+			pm_printf(ALPM_LOG_DEBUG, "config: lowspeedtime: %ld\n", config->lowspeedtime);
 		} else {
 			pm_printf(ALPM_LOG_WARNING,
 					_("config file %s, line %d: directive '%s' in section '%s' not recognized.\n"),
@@ -732,6 +753,9 @@ static int setup_libalpm(void)
 	alpm_option_set_eventcb(handle, cb_event);
 	alpm_option_set_questioncb(handle, cb_question);
 	alpm_option_set_progresscb(handle, cb_progress);
+
+	alpm_option_set_lowspeedlimit(handle, config->lowspeedlimit);
+	alpm_option_set_lowspeedtime(handle, config->lowspeedtime);
 
 	if(config->op == PM_OP_FILES) {
 		alpm_option_set_dbext(handle, ".files");
