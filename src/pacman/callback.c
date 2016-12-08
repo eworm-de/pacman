@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <limits.h> /* UINT_MAX */
+#include <langinfo.h>
 
 #include <alpm.h>
 
@@ -102,7 +103,12 @@ static void fill_progress(const int bar_percent, const int disp_percent,
 	const int hashlen = proglen > 8 ? proglen - 8 : 0;
 	const int hash = bar_percent * hashlen / 100;
 	static int lasthash = 0, mouth = 0;
+	uint8_t have_utf8 = 0;
 	int i;
+
+	setlocale(LC_CTYPE, "");
+	if(strcmp(nl_langinfo(CODESET), "UTF-8") == 0)
+		have_utf8 = 1;
 
 	if(bar_percent == 0) {
 		lasthash = 0;
@@ -112,30 +118,44 @@ static void fill_progress(const int bar_percent, const int disp_percent,
 	if(hashlen > 0) {
 		fputs(" [", stdout);
 		for(i = hashlen; i > 0; --i) {
-			/* if special progress bar enabled */
+			/* progress bar with pacman... */
 			if(config->chomp) {
-				if(i > hashlen - hash) {
-					putchar('-');
-				} else if(i == hashlen - hash) {
-					if(lasthash == hash) {
-						if(mouth) {
-							fputs("\033[1;33mC\033[m", stdout);
-						} else {
-							fputs("\033[1;33mc\033[m", stdout);
-						}
+				/* ... in unicode: [⋅⋅⋅⋅⋅ᗧ•••••ᗣ•••] */
+				if(have_utf8) {
+					if(i > hashlen - hash) {
+						fputs("⋅", stdout);
+					} else if(i == hashlen - hash) {
+						fputs("\033[1;33mᗧ\033[m", stdout);
+					} else if(i % 5 == 0) {
+						printf("\033[1;%dmᗣ\033[m", i % 6 + 31);
 					} else {
-						lasthash = hash;
-						mouth = mouth == 1 ? 0 : 1;
-						if(mouth) {
-							fputs("\033[1;33mC\033[m", stdout);
-						} else {
-							fputs("\033[1;33mc\033[m", stdout);
-						}
+						fputs("\033[0;37m•\033[m", stdout);
 					}
-				} else if(i % 3 == 0) {
-					fputs("\033[0;37mo\033[m", stdout);
-				} else {
-					fputs("\033[0;37m \033[m", stdout);
+				} /* ... in ascii: [-----C o  o  o ] */
+				else {
+					if(i > hashlen - hash) {
+						putchar('-');
+					} else if(i == hashlen - hash) {
+						if(lasthash == hash) {
+							if(mouth) {
+								fputs("\033[1;33mC\033[m", stdout);
+							} else {
+								fputs("\033[1;33mc\033[m", stdout);
+							}
+						} else {
+							lasthash = hash;
+							mouth = mouth == 1 ? 0 : 1;
+							if(mouth) {
+								fputs("\033[1;33mC\033[m", stdout);
+							} else {
+								fputs("\033[1;33mc\033[m", stdout);
+							}
+						}
+					} else if(i % 3 == 0) {
+						fputs("\033[0;37mo\033[m", stdout);
+					} else {
+						fputs("\033[0;37m \033[m", stdout);
+					}
 				}
 			} /* else regular progress bar */
 			else if(i > hashlen - hash) {
