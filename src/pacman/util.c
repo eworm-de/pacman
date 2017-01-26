@@ -853,9 +853,11 @@ static alpm_list_t *create_verbose_header(size_t count)
 	alpm_list_t *ret = NULL;
 
 	char *header;
-	pm_asprintf(&header, "%s (%zu)", _("Package"), count);
+	add_table_cell(&ret, _("Repository"), CELL_TITLE);
 
+	pm_asprintf(&header, "%s (%zu)", _("Package"), count);
 	add_table_cell(&ret, header, CELL_TITLE | CELL_FREE);
+
 	add_table_cell(&ret, _("Old Version"), CELL_TITLE);
 	add_table_cell(&ret, _("New Version"), CELL_TITLE);
 	add_table_cell(&ret, _("Net Change"), CELL_TITLE);
@@ -877,11 +879,16 @@ static alpm_list_t *create_verbose_row(pm_target_t *target)
 	if(target->install) {
 		const alpm_db_t *db = alpm_pkg_get_db(target->install);
 		if(db) {
-			pm_asprintf(&str, "%s/%s", alpm_db_get_name(db), alpm_pkg_get_name(target->install));
+			pm_asprintf(&str, "%s", alpm_db_get_name(db));
 		} else {
-			pm_asprintf(&str, "%s", alpm_pkg_get_name(target->install));
+			str = NULL;
 		}
+		add_table_cell(&ret, str, CELL_NORMAL | CELL_FREE);
+
+		pm_asprintf(&str, "%s", alpm_pkg_get_name(target->install));
 	} else {
+		add_table_cell(&ret, NULL, CELL_NORMAL | CELL_FREE);
+
 		pm_asprintf(&str, "%s", alpm_pkg_get_name(target->remove));
 	}
 	add_table_cell(&ret, str, CELL_NORMAL | CELL_FREE);
