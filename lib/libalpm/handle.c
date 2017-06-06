@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <sys/file.h>
 #include <sys/types.h>
 #include <syslog.h>
 #include <sys/stat.h>
@@ -112,10 +113,20 @@ int _alpm_handle_lock(alpm_handle_t *handle)
 	FREE(dir);
 
 	do {
-		handle->lockfd = open(handle->lockfile, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0000);
+		handle->lockfd = open(handle->lockfile, O_WRONLY | O_CREAT | O_CLOEXEC, 0000);
 	} while(handle->lockfd == -1 && errno == EINTR);
 
-	return (handle->lockfd >= 0 ? 0 : -1);
+	if (handle->lockfd == -1)
+		return -1;
+
+	/* try to get an exclusive lock */
+	if (flock(handle->lockfd, LOCK_EX | LOCK_NB) == -1) {
+		close(handle->lockfd);
+		handle->lockfd = -1;
+		return -1;
+	}
+
+	return 0;
 }
 
 int SYMEXPORT alpm_unlock(alpm_handle_t *handle)
@@ -123,6 +134,8 @@ int SYMEXPORT alpm_unlock(alpm_handle_t *handle)
 	ASSERT(handle != NULL, return -1);
 	ASSERT(handle->lockfile != NULL, return 0);
 	ASSERT(handle->lockfd >= 0, return 0);
+
+	flock(handle->lockfd, LOCK_UN);
 
 	close(handle->lockfd);
 	handle->lockfd = -1;
