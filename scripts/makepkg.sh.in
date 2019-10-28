@@ -1018,7 +1018,7 @@ while [[ $1 ]]; do
 done
 
 # setup signal traps
-trap 'clean_up' 0
+trap 'clean_up >&2' 0
 for signal in TERM HUP QUIT; do
 	trap "trap_exit $signal \"$(gettext "%s signal caught. Exiting...")\" \"$signal\"" "$signal"
 done
