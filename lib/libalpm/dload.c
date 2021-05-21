@@ -276,6 +276,7 @@ static size_t dload_parseheader_cb(void *ptr, size_t size, size_t nmemb, void *u
 	const char *fptr, *endptr = NULL;
 	const char * const cd_header = "Content-Disposition:";
 	const char * const fn_key = "filename=";
+	const char * const xpef_header = "X-Pacman-Expected-Failure:";
 	struct dload_payload *payload = (struct dload_payload *)user;
 	long respcode;
 
@@ -300,6 +301,13 @@ static size_t dload_parseheader_cb(void *ptr, size_t size, size_t nmemb, void *u
 						RET_ERR(payload->handle, ALPM_ERR_MEMORY, realsize));
 			}
 		}
+	}
+
+	/* By setting an extra HTTP header 'X-Pacman-Expected-Failure' the server can
+	   indicate that the failure is expected. The next server is tried without
+	   error message and without increasing the server's error count. */
+	if(_alpm_raw_ncmp(xpef_header, ptr, strlen(xpef_header)) == 0) {
+		payload->errors_ok = 1;
 	}
 
 	curl_easy_getinfo(payload->curl, CURLINFO_RESPONSE_CODE, &respcode);
