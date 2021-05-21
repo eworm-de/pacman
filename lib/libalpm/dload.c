@@ -274,8 +274,10 @@ static size_t dload_parseheader_cb(void *ptr, size_t size, size_t nmemb, void *u
 {
 	size_t realsize = size * nmemb;
 	const char *fptr, *endptr = NULL;
+	const char * const cc_header = "Cache-Control:";
 	const char * const cd_header = "Content-Disposition:";
 	const char * const fn_key = "filename=";
+	const char * const nc_key = "no-cache";
 	struct dload_payload *payload = (struct dload_payload *)user;
 	long respcode;
 
@@ -299,6 +301,15 @@ static size_t dload_parseheader_cb(void *ptr, size_t size, size_t nmemb, void *u
 				STRNDUP(payload->content_disp_name, fptr, endptr - fptr + 1,
 						RET_ERR(payload->handle, ALPM_ERR_MEMORY, realsize));
 			}
+		}
+	}
+
+	/* By setting the http header 'Cache-Control: no-cache' the server can indicate
+	   that this is a soft failure which should not be cached. No error message is
+	   shown, and server's error count is not increased. */
+	if(_alpm_raw_ncmp(cc_header, ptr, strlen(cc_header)) == 0) {
+		if(strstr(ptr, nc_key)) {
+			payload->errors_ok = 1;
 		}
 	}
 
