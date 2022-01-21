@@ -1324,16 +1324,19 @@ alpm_list_t *alpm_db_get_servers(const alpm_db_t *db);
 /** Sets the list of servers for the database to use.
  * @param db the database to set the servers. The list will be duped and
  * the original will still need to be freed by the caller.
+ * @param cacheservers a char* list of cacheservers.
  * @param servers a char* list of servers.
  */
-int alpm_db_set_servers(alpm_db_t *db, alpm_list_t *servers);
+int alpm_db_set_servers(alpm_db_t *db, alpm_list_t *cacheservers,
+		alpm_list_t *servers);
 
 /** Add a download server to a database.
  * @param db database pointer
  * @param url url of the server
+ * @param cache 0 for regular server, 1 for cacheserver
  * @return 0 on success, -1 on error (pm_errno is set accordingly)
  */
-int alpm_db_add_server(alpm_db_t *db, const char *url);
+int alpm_db_add_server(alpm_db_t *db, const char *url, const int cache);
 
 /** Remove a download server from a database.
  * @param db database pointer

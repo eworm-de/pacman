@@ -243,6 +243,11 @@ number.
 *Server =* url::
 	A full URL to a location where the database, packages, and signatures (if
 	available) for this repository can be found.
+
+*CacheServer =* url::
+	A full URL to a location where packages, and signatures (if available)
+	for this repository can be found. There's no server error limit, log
+	messages are not shown for server side errors (http code >= 400).
 +
 During parsing, pacman will define the `$repo` variable to the name of the
 current section. This is often utilized in files specified using the 'Include'

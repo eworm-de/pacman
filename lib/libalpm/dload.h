@@ -58,6 +58,8 @@ struct dload_payload {
 #endif
 };
 
+void server_make_cache(alpm_handle_t *handle, const char *server);
+
 void _alpm_dload_payload_reset(struct dload_payload *payload);
 
 int _alpm_download(alpm_handle_t *handle,

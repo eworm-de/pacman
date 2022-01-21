@@ -172,6 +172,7 @@ void config_repo_free(config_repo_t *repo)
 		return;
 	}
 	free(repo->name);
+	FREELIST(repo->cacheservers);
 	FREELIST(repo->servers);
 	free(repo);
 }
@@ -781,9 +782,9 @@ static char *replace_server_vars(config_t *c, config_repo_t *r, const char *s)
 	}
 }
 
-static int _add_mirror(alpm_db_t *db, char *value)
+static int _add_mirror(alpm_db_t *db, char *value, const int cache)
 {
-	if(alpm_db_add_server(db, value) != 0) {
+	if(alpm_db_add_server(db, value, cache) != 0) {
 		/* pm_errno is set by alpm_db_setserver */
 		pm_printf(ALPM_LOG_ERROR, _("could not add server URL to database '%s': %s (%s)\n"),
 				alpm_db_get_name(db), value, alpm_strerror(alpm_errno(config->handle)));
@@ -809,8 +810,14 @@ static int register_repo(config_repo_t *repo)
 			repo->usage, repo->name);
 	alpm_db_set_usage(db, repo->usage);
 
+	for(i = repo->cacheservers; i; i = alpm_list_next(i)) {
+		if(_add_mirror(db, i->data, 1) != 0) {
+			return 1;
+		}
+	}
+
 	for(i = repo->servers; i; i = alpm_list_next(i)) {
-		if(_add_mirror(db, i->data) != 0) {
+		if(_add_mirror(db, i->data, 0) != 0) {
 			return 1;
 		}
 	}
@@ -993,6 +1000,9 @@ static int _parse_repo(const char *key, char *value, const char *file,
 	if(strcmp(key, "Server") == 0) {
 		CHECK_VALUE(value);
 		repo->servers = alpm_list_add(repo->servers, strdup(value));
+	} else if(strcmp(key, "CacheServer") == 0) {
+		CHECK_VALUE(value);
+		repo->cacheservers = alpm_list_add(repo->cacheservers, strdup(value));
 	} else if(strcmp(key, "SigLevel") == 0) {
 		CHECK_VALUE(value);
 		alpm_list_t *values = NULL;

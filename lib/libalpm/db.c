@@ -36,6 +36,7 @@
 #include "alpm.h"
 #include "package.h"
 #include "group.h"
+#include "dload.h"
 
 alpm_db_t SYMEXPORT *alpm_register_syncdb(alpm_handle_t *handle,
 		const char *treename, int siglevel)
@@ -137,14 +138,22 @@ alpm_list_t SYMEXPORT *alpm_db_get_servers(const alpm_db_t *db)
 	return db->servers;
 }
 
-int SYMEXPORT alpm_db_set_servers(alpm_db_t *db, alpm_list_t *servers)
+int SYMEXPORT alpm_db_set_servers(alpm_db_t *db, alpm_list_t *cacheservers,
+		alpm_list_t *servers)
 {
 	alpm_list_t *i;
 	ASSERT(db != NULL, return -1);
+	FREELIST(db->cacheservers);
 	FREELIST(db->servers);
+	for(i = cacheservers; i; i = i->next) {
+		char *url = i->data;
+		if(alpm_db_add_server(db, url, 1) != 0) {
+			return -1;
+		}
+	}
 	for(i = servers; i; i = i->next) {
 		char *url = i->data;
-		if(alpm_db_add_server(db, url) != 0) {
+		if(alpm_db_add_server(db, url, 0) != 0) {
 			return -1;
 		}
 	}
@@ -164,7 +173,7 @@ static char *sanitize_url(const char *url)
 	return newurl;
 }
 
-int SYMEXPORT alpm_db_add_server(alpm_db_t *db, const char *url)
+int SYMEXPORT alpm_db_add_server(alpm_db_t *db, const char *url, const int cache)
 {
 	char *newurl;
 
@@ -178,8 +187,13 @@ int SYMEXPORT alpm_db_add_server(alpm_db_t *db, const char *url)
 		return -1;
 	}
 	db->servers = alpm_list_add(db->servers, newurl);
-	_alpm_log(db->handle, ALPM_LOG_DEBUG, "adding new server URL to database '%s': %s\n",
-			db->treename, newurl);
+#ifdef HAVE_LIBCURL
+	if(cache) {
+		server_make_cache(db->handle, newurl);
+	}
+#endif
+	_alpm_log(db->handle, ALPM_LOG_DEBUG, "adding new %sserver URL to database '%s': %s\n",
+			cache ? "cache " : "", db->treename, newurl);
 
 	return 0;
 }

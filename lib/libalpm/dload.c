@@ -62,15 +62,16 @@ static int curl_gethost(const char *url, char *buffer, size_t buf_len);
  * server blacklisting */
 const unsigned int server_error_limit = 3;
 
-struct server_error_count {
+struct server_opts {
 	char server[HOSTNAME_SIZE];
+	unsigned int cache;
 	unsigned int errors;
 };
 
-static struct server_error_count *find_server_errors(alpm_handle_t *handle, const char *server)
+static struct server_opts *find_server_errors(alpm_handle_t *handle, const char *server)
 {
 	alpm_list_t *i;
-	struct server_error_count *h;
+	struct server_opts *h;
 	char hostname[HOSTNAME_SIZE];
 	/* key off the hostname because a host may serve multiple repos under
 	 * different url's and errors are likely to be host-wide */
@@ -83,7 +84,7 @@ static struct server_error_count *find_server_errors(alpm_handle_t *handle, cons
 			return h;
 		}
 	}
-	if((h = calloc(sizeof(struct server_error_count), 1))
+	if((h = calloc(sizeof(struct server_opts), 1))
 			&& alpm_list_append(&handle->server_errors, h)) {
 		strcpy(h->server, hostname);
 		h->errors = 0;
@@ -94,9 +95,38 @@ static struct server_error_count *find_server_errors(alpm_handle_t *handle, cons
 	}
 }
 
+static int is_cache_server(alpm_handle_t *handle, const char *server)
+{
+	struct server_opts *h;
+	if((h = find_server_errors(handle, server))) {
+		return h->cache;
+	}
+	return 0;
+}
+
+static int should_skip_cacheserver(alpm_handle_t *handle, const char *server, const char *filepath)
+{
+	if(!is_cache_server(handle, server)) {
+		return 0;
+	}
+	if(filepath) {
+		int len = strlen(filepath);
+		return (len > 3 && strncmp(filepath + len - 3, ".db", 3) == 0) ? 1 : 0;
+	}
+	return 0;
+}
+
+void server_make_cache(alpm_handle_t *handle, const char *server)
+{
+	struct server_opts *h;
+	if((h = find_server_errors(handle, server))) {
+		h->cache = 1;
+	}
+}
+
 static int should_skip_server(alpm_handle_t *handle, const char *server)
 {
-	struct server_error_count *h;
+	struct server_opts *h;
 	if(server_error_limit && (h = find_server_errors(handle, server)) ) {
 		return h->errors >= server_error_limit;
 	}
@@ -105,9 +135,10 @@ static int should_skip_server(alpm_handle_t *handle, const char *server)
 
 static void server_increment_error(alpm_handle_t *handle, const char *server, int count)
 {
-	struct server_error_count *h;
+	struct server_opts *h;
 	if(server_error_limit
 			&& (h = find_server_errors(handle, server))
+			&& !is_cache_server(handle, server)
 			&& !should_skip_server(handle, server) ) {
 		h->errors += count;
 
@@ -413,7 +444,8 @@ static int curl_retry_next_server(CURLM *curlm, CURL *curl, struct dload_payload
 	struct stat st;
 	alpm_handle_t *handle = payload->handle;
 
-	while(payload->servers && should_skip_server(handle, payload->servers->data)) {
+	while(payload->servers && (should_skip_server(handle, payload->servers->data)
+				|| should_skip_cacheserver(handle, payload->servers->data, payload->filepath))) {
 		payload->servers = payload->servers->next;
 	}
 	if(!payload->servers) {
@@ -508,7 +540,7 @@ static int curl_check_finished_download(alpm_handle_t *handle, CURLM *curlm, CUR
 					/* non-translated message is same as libcurl */
 					snprintf(payload->error_buffer, sizeof(payload->error_buffer),
 							"The requested URL returned error: %ld", payload->respcode);
-					_alpm_log(handle, ALPM_LOG_ERROR,
+					_alpm_log(handle, is_cache_server(handle, payload->fileurl) ? ALPM_LOG_DEBUG : ALPM_LOG_ERROR,
 							_("failed retrieving file '%s' from %s : %s\n"),
 							payload->remote_name, hostname, payload->error_buffer);
 					server_soft_error(handle, payload->fileurl);
@@ -766,7 +798,9 @@ static int curl_add_payload(alpm_handle_t *handle, CURLM *curlm,
 		ASSERT(!payload->filepath, GOTO_ERR(handle, ALPM_ERR_WRONG_ARGS, cleanup));
 	} else {
 		const char *server;
-		while(payload->servers && should_skip_server(handle, payload->servers->data)) {
+
+		while(payload->servers && (should_skip_server(handle, payload->servers->data)
+					|| should_skip_cacheserver(handle, payload->servers->data, payload->filepath))) {
 			payload->servers = payload->servers->next;
 		}
 

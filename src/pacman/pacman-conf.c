@@ -236,6 +236,7 @@ static void dump_repo(config_repo_t *repo)
 {
 	show_usage("Usage", repo->usage);
 	show_siglevel("SigLevel", repo->siglevel, 0);
+	show_list_str("CacheServer", repo->cacheservers);
 	show_list_str("Server", repo->servers);
 }
 
